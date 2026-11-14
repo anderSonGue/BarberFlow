@@ -1,0 +1,11 @@
+{
+  "name": "barberflow-workspace",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npm run dev --prefix barberflow",
+    "build": "npm run build --prefix barberflow",
+    "preview": "npm run preview --prefix barberflow"
+  }
+}
+

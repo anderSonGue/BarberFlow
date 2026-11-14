@@ -1,0 +1,19 @@
+# Dependencias (NUNCA deben subirse a Git ni comprimirse)
+node_modules/
+barberflow/node_modules/
+
+# Compilaciones de producción
+dist/
+barberflow/dist/
+
+# Archivos de sistema y logs
+*.log
+.DS_Store
+Thumbs.db
+
+# Configuración de editores
+.vscode/
+.idea/
+.env
+.env.local
+
