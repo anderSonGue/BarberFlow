@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.barberflow.BarberflowApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.92 s -- in com.barberflow.BarberflowApplicationTests

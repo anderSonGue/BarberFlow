@@ -1,0 +1,195 @@
+// BarberFlow - Esquema Relacional de Base de Datos
+// Soporta SQLite nativo local (compatible directo con DBeaver) y migrable a PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  nombre         String
+  email          String    @unique
+  passwordHash   String
+  rol            String    // 'ADMINISTRADOR' | 'TRABAJADOR'
+  activo         Boolean   @default(true)
+  profesionalId  Int?      // Vinculación opcional al perfil de barbero
+  profesional    Profesional? @relation(fields: [profesionalId], references: [id])
+  movimientos    MovimientoInventario[]
+  pagosRegistrados Pago[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Profesional {
+  id           Int       @id @default(autoincrement())
+  nombre       String
+  especialidad String
+  calificacion Float     @default(5.0)
+  porcentaje   Float     @default(50.0) // % de comisión
+  telefono     String
+  activo       Boolean   @default(true)
+  usuarios     User[]
+  citas        Cita[]
+  pagos        Pago[]
+  consumos     ConsumoServicio[]
+  createdAt    DateTime  @default(now())
+}
+
+model Cliente {
+  id          Int       @id @default(autoincrement())
+  nombre      String
+  telefono    String
+  email       String?
+  visitas     Int       @default(0)
+  notas       String?
+  puntos      Int       @default(0)
+  citas       Cita[]
+  pagos       Pago[]
+  movimientos MovimientoInventario[]
+  consumos    ConsumoServicio[]
+  createdAt   DateTime  @default(now())
+}
+
+model Servicio {
+  id           Int              @id @default(autoincrement())
+  nombre       String
+  categoria    String           @default("General")
+  duracionMin  Int              @default(30)
+  precio       Float
+  activo       Boolean          @default(true)
+  receta       ServicioInsumo[]
+  citas        CitaServicio[]
+  consumos     ConsumoServicio[]
+  createdAt    DateTime         @default(now())
+}
+
+model Insumo {
+  id            Int                    @id @default(autoincrement())
+  codigo        String                 @unique
+  nombre        String
+  categoria     String                 @default("Insumos")
+  unidad        String                 // 'ml', 'g', 'unidad'
+  existencias   Float                  @default(0)
+  stockMinimo   Float                  @default(10)
+  costoUnitario Float                  @default(0)
+  activo        Boolean                @default(true)
+  recetas       ServicioInsumo[]
+  movimientos   MovimientoInventario[]
+  consumos      ConsumoServicio[]
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+}
+
+model ServicioInsumo {
+  id                Int      @id @default(autoincrement())
+  servicioId        Int
+  insumoId          Int
+  cantidadRequerida Float
+  servicio          Servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
+  insumo            Insumo   @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+
+  @@unique([servicioId, insumoId])
+}
+
+model Cita {
+  id            Int            @id @default(autoincrement())
+  clienteId     Int
+  profesionalId Int
+  fecha         String         // Formato YYYY-MM-DD
+  hora          String         // Formato HH:MM
+  duracionMin   Int            @default(30)
+  estado        String         @default("PROGRAMADA") // PROGRAMADA, CONFIRMADA, EN_ATENCION, FINALIZADA, CANCELADA, NO_ASISTIO
+  valorEstimado Float          @default(0)
+  notas         String?
+  cliente       Cliente        @relation(fields: [clienteId], references: [id])
+  profesional   Profesional    @relation(fields: [profesionalId], references: [id])
+  servicios     CitaServicio[]
+  pago          Pago?
+  movimientos   MovimientoInventario[]
+  consumos      ConsumoServicio[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model CitaServicio {
+  id         Int      @id @default(autoincrement())
+  citaId     Int
+  servicioId Int
+  precio     Float
+  cita       Cita     @relation(fields: [citaId], references: [id], onDelete: Cascade)
+  servicio   Servicio @relation(fields: [servicioId], references: [id])
+
+  @@unique([citaId, servicioId])
+}
+
+model Pago {
+  id                  Int                   @id @default(autoincrement())
+  citaId              Int                   @unique
+  clienteId           Int
+  profesionalId       Int
+  usuarioId           Int?
+  metodo              String                // EFECTIVO, TARJETA, TRANSFERENCIA, NEQUI_DAVIPLATA
+  subtotal            Float
+  descuento           Float                 @default(0)
+  codigoPromo         String?
+  puntosCanjeados     Int                   @default(0)
+  valorCobrado        Float
+  costoInsumos        Float                 @default(0)
+  baseComision        Float
+  porcentajeComision  Float
+  comisionProfesional Float
+  utilidadNegocio     Float
+  puntosGanados       Int                   @default(0)
+  fecha               DateTime              @default(now())
+  cita                Cita                  @relation(fields: [citaId], references: [id])
+  cliente             Cliente               @relation(fields: [clienteId], references: [id])
+  profesional         Profesional           @relation(fields: [profesionalId], references: [id])
+  usuario             User?                 @relation(fields: [usuarioId], references: [id])
+  movimientos         MovimientoInventario[]
+  consumos            ConsumoServicio[]
+}
+
+model MovimientoInventario {
+  id                 Int       @id @default(autoincrement())
+  insumoId           Int
+  tipo               String    // ENTRADA, SALIDA_SERVICIO, AJUSTE_MANUAL, DEVOLUCION, CORRECCION
+  cantidadAnterior   Float
+  cantidadMovimiento Float
+  cantidadResultante Float
+  motivo             String
+  usuarioId          Int?
+  clienteId          Int?
+  citaId             Int?
+  pagoId             Int?
+  fecha              DateTime  @default(now())
+  insumo             Insumo    @relation(fields: [insumoId], references: [id])
+  usuario            User?     @relation(fields: [usuarioId], references: [id])
+  cliente            Cliente?  @relation(fields: [clienteId], references: [id])
+  cita               Cita?     @relation(fields: [citaId], references: [id])
+  pago               Pago?     @relation(fields: [pagoId], references: [id])
+}
+
+model ConsumoServicio {
+  id                 Int         @id @default(autoincrement())
+  pagoId             Int
+  citaId             Int
+  servicioId         Int
+  insumoId           Int
+  cantidadConsumida  Float
+  costoUnitario      Float
+  costoTotal         Float
+  clienteId          Int
+  profesionalId      Int
+  fecha              DateTime    @default(now())
+  pago               Pago        @relation(fields: [pagoId], references: [id], onDelete: Cascade)
+  cita               Cita        @relation(fields: [citaId], references: [id])
+  servicio           Servicio    @relation(fields: [servicioId], references: [id])
+  insumo             Insumo      @relation(fields: [insumoId], references: [id])
+  cliente            Cliente     @relation(fields: [clienteId], references: [id])
+  profesional        Profesional @relation(fields: [profesionalId], references: [id])
+}
