@@ -4,7 +4,7 @@ Software profesional de gestión operativa y administrativa para barberías. Des
 
 ---
 
-## 🏗️ Arquitectura del Sistema
+##  Arquitectura del Sistema
 
 * **Frontend:** React 18 + Vite 5 (SPA moderna, componentes modulares, diseño minimalista sin emojis ni elementos decorativos innecesarios).
 * **Backend:** Node.js + Express (API RESTful estructurada en controladores, rutas y middlewares de autorización).
@@ -13,7 +13,7 @@ Software profesional de gestión operativa y administrativa para barberías. Des
 
 ---
 
-## 👥 Credenciales de Acceso y Roles
+##  Credenciales de Acceso y Roles
 
 El sistema implementa dos roles principales con segregación estricta de permisos:
 
@@ -26,7 +26,7 @@ El sistema implementa dos roles principales con segregación estricta de permiso
 
 ---
 
-## 🚀 Puesta en Marcha
+##  Puesta en Marcha
 
 ### 1. Iniciar el Backend (Servidor API REST)
 En una terminal en la raíz del proyecto:
@@ -50,7 +50,7 @@ npm --prefix server test
 
 ---
 
-## 🗄️ Conexión con DBeaver
+##  Conexión con DBeaver
 
 Puedes inspeccionar y consultar toda la base de datos relacional directamente desde **DBeaver**:
 
@@ -63,7 +63,7 @@ Puedes inspeccionar y consultar toda la base de datos relacional directamente de
 
 ---
 
-## 📦 Sistema de Inventario y Regla Inquebrantable
+##  Sistema de Inventario y Regla Inquebrantable
 
 1. **Relación Operativa:**
    `Cliente ➔ Cita ➔ Servicio ➔ Consumo de insumos según Receta ➔ Movimiento de Inventario.`
