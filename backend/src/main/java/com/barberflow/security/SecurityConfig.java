@@ -43,7 +43,11 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                 // Módulos protegidos con RBAC estricto
-                // 1. Inventario, Compras y Trazabilidad: Solo ADMINISTRADOR
+                // 1. Acceso a catálogos necesarios para Reservar y Ventas
+                .requestMatchers(HttpMethod.GET, "/api/usuarios/profesionales").hasAnyRole("ADMINISTRADOR", "TRABAJADOR")
+                .requestMatchers(HttpMethod.GET, "/api/inventario/productos").hasAnyRole("ADMINISTRADOR", "TRABAJADOR")
+
+                // 2. Inventario administrativo, Compras, Usuarios y Auditoría: Solo ADMINISTRADOR
                 .requestMatchers("/api/inventario/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/api/compras/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/api/historial/**").hasRole("ADMINISTRADOR")
@@ -53,7 +57,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/citas/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")
 
-                // 2. Operaciones compartidas (ADMINISTRADOR y TRABAJADOR)
+                // 3. Operaciones compartidas (ADMINISTRADOR y TRABAJADOR)
                 .requestMatchers("/api/citas/**").hasAnyRole("ADMINISTRADOR", "TRABAJADOR")
                 .requestMatchers("/api/clientes/**").hasAnyRole("ADMINISTRADOR", "TRABAJADOR")
                 .requestMatchers("/api/servicios/**").hasAnyRole("ADMINISTRADOR", "TRABAJADOR")

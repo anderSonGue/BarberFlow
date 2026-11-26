@@ -117,17 +117,29 @@ export default function Agenda({ tick, onChange, onIrACobrar }) {
 
       {/* FILTROS PRINCIPALES */}
       <div className="filtros-grid">
-        <label>
-          Barbero / Profesional:
-          <select value={profId} onChange={(e) => setProfId(e.target.value)}>
-            <option value="">Todos los profesionales</option>
-            {profesionales.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nombre} ({p.especialidad})
-              </option>
-            ))}
-          </select>
-        </label>
+        {esAdmin ? (
+          <label>
+            Barbero / Profesional:
+            <select value={profId} onChange={(e) => setProfId(e.target.value)}>
+              <option value="">Todos los profesionales</option>
+              {profesionales.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nombre} ({p.especialidad})
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <label>
+            Profesional:
+            <input
+              type="text"
+              readOnly
+              value={usuario?.nombre || 'Mi Agenda'}
+              className="input-readonly"
+            />
+          </label>
+        )}
 
         <label>
           Fecha:

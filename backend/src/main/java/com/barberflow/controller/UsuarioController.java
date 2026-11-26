@@ -9,6 +9,7 @@ import com.barberflow.repository.UsuarioRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -36,6 +37,7 @@ public class UsuarioController {
     }
 
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<Map<String, Object>> getUsuarios() {
         List<Usuario> lista = usuarioRepository.findByActivoTrue();
         List<Map<String, Object>> dtos = lista.stream().map(u -> {
@@ -66,6 +68,10 @@ public class UsuarioController {
 
         if (nombre == null || email == null || password == null || rolStr == null) {
             throw new BusinessException("Nombre, correo, contraseña y rol son requeridos");
+        }
+
+        if (password.length() < 8 || password.length() > 72) {
+            throw new BusinessException("La contraseña debe tener entre 8 y 72 caracteres");
         }
 
         if (usuarioRepository.existsByEmail(email.trim().toLowerCase())) {

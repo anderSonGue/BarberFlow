@@ -1,11 +1,16 @@
 package com.barberflow.controller;
 
 import com.barberflow.domain.entity.Cita;
+import com.barberflow.domain.entity.Usuario;
+import com.barberflow.domain.enums.Rol;
 import com.barberflow.dto.request.CrearCitaRequest;
+import com.barberflow.service.AuthService;
 import com.barberflow.service.CitaService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.format.DateTimeFormatter;
@@ -16,9 +21,11 @@ import java.util.*;
 public class CitaController {
 
     private final CitaService citaService;
+    private final AuthService authService;
 
-    public CitaController(CitaService citaService) {
+    public CitaController(CitaService citaService, AuthService authService) {
         this.citaService = citaService;
+        this.authService = authService;
     }
 
     @GetMapping
@@ -26,9 +33,21 @@ public class CitaController {
             @RequestParam(required = false) String fecha,
             @RequestParam(required = false) Integer profesionalId,
             @RequestParam(required = false) String estado,
-            @RequestParam(required = false) String buscar) {
+            @RequestParam(required = false) String buscar,
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        List<Cita> lista = citaService.getCitas(fecha, profesionalId, estado);
+        Usuario usuario = authService.obtenerUsuarioPorEmail(userDetails.getUsername());
+
+        // Regla estricta de negocio: Un trabajador solo puede consultar su propia agenda y citas
+        Integer filtroProf = profesionalId;
+        if (usuario.getRol() == Rol.TRABAJADOR) {
+            if (usuario.getProfesional() == null) {
+                return ResponseEntity.ok(Map.of("ok", true, "data", Collections.emptyList()));
+            }
+            filtroProf = usuario.getProfesional().getId();
+        }
+
+        List<Cita> lista = citaService.getCitas(fecha, filtroProf, estado);
 
         if (buscar != null && !buscar.isBlank()) {
             String q = buscar.toLowerCase().trim();

@@ -142,17 +142,29 @@ export default function Ventas({ tick, onChange }) {
               </select>
             </label>
 
-            <label>
-              Barbero Vendedor:
-              <select value={profesionalId} onChange={(e) => setProfesionalId(e.target.value)}>
-                <option value="">Venta General Mostrador</option>
-                {profesionales.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nombre}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {esAdmin ? (
+              <label>
+                Barbero Vendedor:
+                <select value={profesionalId} onChange={(e) => setProfesionalId(e.target.value)}>
+                  <option value="">Venta General Mostrador</option>
+                  {profesionales.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <label>
+                Barbero Vendedor:
+                <input
+                  type="text"
+                  readOnly
+                  value={usuario?.nombre || 'Mi Perfil'}
+                  className="input-readonly"
+                />
+              </label>
+            )}
 
             <label>
               Método de Pago:

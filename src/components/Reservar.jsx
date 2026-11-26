@@ -218,7 +218,7 @@ export default function Reservar({ onChange }) {
                   <span className="chip-desc">{p.especialidad}</span>
                   <div className="chip-meta">
                     <span>Calificación: {p.calificacion}</span>
-                    <span>Comisión: {p.porcentaje}%</span>
+                    <span>Comisión: {p.porcentajeComision}%</span>
                   </div>
                 </button>
               )

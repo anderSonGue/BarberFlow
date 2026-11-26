@@ -1,6 +1,7 @@
 package com.barberflow.domain.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public class Servicio {
     private Boolean activo = true;
 
     @OneToMany(mappedBy = "servicio", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<ServicioInsumo> receta = new ArrayList<>();
 
     @Column(name = "creado_en", insertable = false, updatable = false)

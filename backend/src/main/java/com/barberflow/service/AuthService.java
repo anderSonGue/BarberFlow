@@ -7,6 +7,7 @@ import com.barberflow.exception.BusinessException;
 import com.barberflow.repository.UsuarioRepository;
 import com.barberflow.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,14 +30,14 @@ public class AuthService {
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
         Usuario usuario = usuarioRepository.findByEmail(request.getEmail().trim().toLowerCase())
-                .orElseThrow(() -> new BusinessException("Credenciales inválidas. Verifique su correo o contraseña."));
+                .orElseThrow(() -> new BadCredentialsException("Credenciales inválidas."));
 
         if (!Boolean.TRUE.equals(usuario.getActivo())) {
             throw new BusinessException("Su cuenta ha sido desactivada. Comuníquese con el administrador.");
         }
 
         if (!passwordEncoder.matches(request.getPassword(), usuario.getPasswordHash())) {
-            throw new BusinessException("Credenciales inválidas. Verifique su correo o contraseña.");
+            throw new BadCredentialsException("Credenciales inválidas.");
         }
 
         String token = tokenProvider.generarToken(usuario.getEmail(), usuario.getRol().name(), usuario.getId());

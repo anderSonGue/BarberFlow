@@ -46,7 +46,16 @@ async function request(endpoint, options = {}) {
   }
 
   if (!res.ok) {
-    const errorMsg = data?.error || `Error ${res.status}: ${res.statusText || 'Petición fallida'}`
+    let errorMsg = data?.error
+    if (!errorMsg) {
+      if (res.status === 405) {
+        errorMsg = 'Error 405 (Método no permitido): El backend no está corriendo o la ruta solicitada no acepta peticiones POST. Asegúrese de que Spring Boot esté iniciado en el puerto 4000.'
+      } else if (res.status === 502 || res.status === 503 || res.status === 504) {
+        errorMsg = 'Error de conexión: No se pudo conectar con el servidor Spring Boot (puerto 4000). Verifique que esté ejecutándose.'
+      } else {
+        errorMsg = `Error ${res.status}: ${res.statusText || 'Petición fallida'}`
+      }
+    }
     if (res.status === 401 && !endpoint.includes('/auth/login')) {
       authStorage.removeToken()
       window.dispatchEvent(new Event('barberflow:unauthorized'))

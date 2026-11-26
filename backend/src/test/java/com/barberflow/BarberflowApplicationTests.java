@@ -15,9 +15,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -26,10 +29,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 @Transactional
 class BarberflowApplicationTests {
+
+    @Autowired
+    private MockMvc mockMvc;
 
     @Autowired
     private AuthService authService;
@@ -74,10 +83,12 @@ class BarberflowApplicationTests {
         profesional.setActivo(true);
         profesional = profesionalRepository.save(profesional);
 
-        adminUser = new Usuario("Admin Test", "admintest@barberflow.com", passwordEncoder.encode("admin123"), Rol.ADMINISTRADOR, null);
+        adminUser = new Usuario("Admin Test", "admintest@barberflow.com", passwordEncoder.encode("admin123"),
+                Rol.ADMINISTRADOR, null);
         adminUser = usuarioRepository.save(adminUser);
 
-        trabajadorUser = new Usuario("Trabajador Test", "trabajadortest@barberflow.com", passwordEncoder.encode("barbero123"), Rol.TRABAJADOR, profesional);
+        trabajadorUser = new Usuario("Trabajador Test", "trabajadortest@barberflow.com",
+                passwordEncoder.encode("barbero123"), Rol.TRABAJADOR, profesional);
         trabajadorUser = usuarioRepository.save(trabajadorUser);
 
         insumo = new Insumo();
@@ -117,7 +128,7 @@ class BarberflowApplicationTests {
     @DisplayName("2. Autenticación con contraseña errónea lanza excepción de negocio")
     void testLoginPasswordInvalido() {
         LoginRequest req = new LoginRequest("admintest@barberflow.com", "clave_invalida");
-        assertThrows(BusinessException.class, () -> authService.login(req));
+        assertThrows(BadCredentialsException.class, () -> authService.login(req));
     }
 
     @Test
@@ -213,5 +224,39 @@ class BarberflowApplicationTests {
 
         // Margen establecimiento = 20000 - 9500 = 10500
         assertEquals(0, new BigDecimal("10500.00").compareTo(pago.getValorEstablecimiento()));
+    }
+
+    @Test
+    @WithMockUser(username = "andres@barberflow.com", roles = {"TRABAJADOR"})
+    @DisplayName("6. RBAC Trabajador: Acceso permitido a profesionales, productos para venta y citas")
+    void testPermisosTrabajadorModulosPermitidos() throws Exception {
+        // Profesionales para Reservar y Ventas
+        mockMvc.perform(get("/api/usuarios/profesionales"))
+                .andExpect(status().isOk());
+
+        // Catálogo de productos para el módulo de Ventas
+        mockMvc.perform(get("/api/inventario/productos"))
+                .andExpect(status().isOk());
+
+        // Consulta de citas
+        mockMvc.perform(get("/api/citas"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "andres@barberflow.com", roles = {"TRABAJADOR"})
+    @DisplayName("7. RBAC Trabajador: Acceso restringido (403 Forbidden) a compras, inventario admin y auditoría")
+    void testPermisosTrabajadorModulosRestringidos() throws Exception {
+        // Inventario de insumos (Solo Admin)
+        mockMvc.perform(get("/api/inventario"))
+                .andExpect(status().isForbidden());
+
+        // Compras y proveedores (Solo Admin)
+        mockMvc.perform(get("/api/compras"))
+                .andExpect(status().isForbidden());
+
+        // Auditoría general (Solo Admin)
+        mockMvc.perform(get("/api/historial"))
+                .andExpect(status().isForbidden());
     }
 }
